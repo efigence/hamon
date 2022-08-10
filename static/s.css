@@ -1,0 +1,14 @@
+
+body {
+  background-color : #112233;
+  color: #dddded;
+
+}
+:root {
+    --root-bg: #171f2bff;
+    --root-bg2: #26365daa;
+    --root-gr-bg: #171f2b;
+    --root-gr-bg2: #26365d;
+    /*--root-fg: #aaaaff;*/
+    --root-fg: #ffffff;
+}
