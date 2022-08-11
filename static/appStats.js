@@ -18,24 +18,24 @@ var pallete_oranges = [oranges.slice().reverse(),oranges].flat(2);
 var pallete_reds = [reds.slice().reverse(),reds].flat(2);
 var pallete_rainbow = [rainbow.slice().reverse(),rainbow].flat(2);
 var chartBytes = d3.horizonChart()
-    .height(40)
+    .height(20)
     .unit("MB")
     //.min_extent([0,1])
     .colors(pallete_blues)
 var chartTime = d3.horizonChart()
-    .height(40)
+    .height(20)
     .unit("us")
     .min_extent([0,500])
     .colors(pallete_rainbow);
 var chartCPU =
     d3.horizonChart()
-        .height(40)
+        .height(20)
         .unit("s")
         .min_extent([0,4])
         .colors(pallete_greens);
 var chartCPUSys =
     d3.horizonChart()
-        .height(40)
+        .height(20)
         .unit("s")
         .min_extent([0,4])
         .colors(pallete_oranges);

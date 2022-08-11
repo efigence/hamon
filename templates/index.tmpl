@@ -8,22 +8,26 @@
     <title>{{ .title }}</title>
 </head>
 <body>
-<div role="horizon"></div>
-
-Heap<br>
-<div role="heap_history"></div>
-Pause<br>
-<div role="pause_history"></div>
-CPU User<br>
-<div role="cpu_user_history"></div>
-Cpu Sys<br>
-<div role="cpu_sys_history"></div>
+<table>
+    <tr>
+        <td>Heap</td>
+        <td><div role="heap_history">
+                <canvas height="20" width="256"></canvas>
+            </div></td>
+    </tr>
+    <tr>
+        <td>Pause</td>
+        <td><div role="pause_history"><canvas height="20" width="256"></canvas></div></td>
+    </tr>
+    <tr>
+        <td>CPU User</td>
+        <td><div role="cpu_user_history"><canvas height="20" width="256"></canvas></div></td>
+    </tr>
+    <tr>
+        <td>Cpu Sys</td>
+        <td><div role="cpu_sys_history"><canvas height="20" width="256"></canvas></div></td>
+    </tr>
+</table>
 <script src="/s/appStats.js"></script>
-<div class=".horizon"></div>
-
-<script>
-
-</script>
-
 
 </body>

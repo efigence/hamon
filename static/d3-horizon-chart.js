@@ -49,7 +49,7 @@ function horizonChart () {
         selection.append('span')
             .attr('class', 'value')
             .text(
-                (Math.min(...data)).toFixed(2) + "/"
+                " " + (Math.min(...data)).toFixed(2) + "/"
                 + (data.reduce((a, b) => a + b, 0) / data.length).toFixed(2) + "/"
                 + (Math.max(...data)).toFixed() + unit);
         var context = canvas.node().getContext('2d');
