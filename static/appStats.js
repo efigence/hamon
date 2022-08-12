@@ -40,26 +40,43 @@ var chartCPUSys =
         .min_extent([0,4])
         .colors(pallete_oranges);
 
-    setInterval(function() {
-        d3.json("/gcstat",function(data) {
-            heapDiv
+var chartTimeMs =
+    d3.horizonChart()
+        .height(20)
+        .unit("ms")
+//        .min_extent([0,10])
+        .colors(pallete_rainbow);
+
+setInterval(function() {
+    d3.json("/gcstat",function(data) {
+        heapDiv
             .data([data['heap_history'].map(x => x / 1024 / 1024)])
             .each(chartBytes);
-        });
-         d3.json("/gcstat",function(data) {
-             pauseDiv
-             .data([data['pause_history']])
-             .each(chartTime);
-         });
-        d3.json("/gcstat",function(data) {
-             cpuUserDiv
-             .data([data['cpu_user']])
-             .each(chartCPU);
-         });
-        d3.json("/gcstat",function(data) {
-             cpuSysDiv
-             .data([data['cpu_sys']])
-             .each(chartCPUSys);
-         });
+    });
+    d3.json("/gcstat",function(data) {
+        pauseDiv
+            .data([data['pause_history']])
+            .each(chartTime);
+    });
+    d3.json("/gcstat",function(data) {
+        cpuUserDiv
+            .data([data['cpu_user']])
+            .each(chartCPU);
+    });
+    d3.json("/gcstat",function(data) {
+        cpuSysDiv
+            .data([data['cpu_sys']])
+            .each(chartCPUSys);
+    });
 
-    },950);
+},950);
+function runGraph(path, key,key2, role) {
+    var div =  d3.select('[role="' + role + '"]');
+    setInterval(function () {
+        d3.json(path, function (data) {
+            div
+                .data([data[key][key2]])
+                .each(chartTimeMs);
+        });
+    },950)
+}

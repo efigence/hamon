@@ -3,25 +3,29 @@ package web
 import (
 	"fmt"
 	"github.com/efigence/go-mon"
+	"github.com/efigence/hamon/stats"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"html/template"
 	"io/fs"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 )
 
 type WebBackend struct {
-	l   *zap.SugaredLogger
-	r   *gin.Engine
-	cfg *Config
+	l     *zap.SugaredLogger
+	r     *gin.Engine
+	cfg   *Config
+	stats *stats.Stats
 }
 
 type Config struct {
 	Logger     *zap.SugaredLogger `yaml:"-"`
 	ListenAddr string             `yaml:"listen_addr"`
+	Stats      *stats.Stats
 }
 
 func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
@@ -32,8 +36,9 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 		panic("missing listen addr")
 	}
 	w := WebBackend{
-		l:   cfg.Logger,
-		cfg: &cfg,
+		l:     cfg.Logger,
+		cfg:   &cfg,
+		stats: cfg.Stats,
 	}
 	r := gin.New()
 	w.r = r
@@ -66,11 +71,21 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 		httpFS.ServeHTTP(c.Writer, c.Request)
 	})
 	r.GET("/", func(c *gin.Context) {
+		keys := make([]string, 0)
+		for k := range w.stats.FrontendDurationMs {
+			if k == "" {
+				continue
+			}
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
 		c.HTML(http.StatusOK, "index.tmpl", gin.H{
-			"title": c.Request.RemoteAddr,
+			"title":         c.Request.RemoteAddr,
+			"frontend_list": keys,
 		})
 	})
 	r.GET("/gcstat", w.GCStats)
+	r.GET("/stats/frontend", w.FrontendStats)
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.tmpl", gin.H{
 			"notfound": c.Request.URL.Path,

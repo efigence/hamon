@@ -3,6 +3,8 @@ package main
 import (
 	"embed"
 	"github.com/efigence/go-mon"
+	ingest "github.com/efigence/hamon/ingest"
+	"github.com/efigence/hamon/stats"
 	"github.com/efigence/hamon/web"
 	"os"
 
@@ -79,9 +81,20 @@ func main() {
 			cli.ShowAppHelp(c)
 			os.Exit(1)
 		}
+		ingest, reqCh, err := ingest.New(ingest.Config{
+			ListenAddr: "127.0.0.1:50514",
+			Logger:     log,
+		})
+		st := stats.New(reqCh)
+
+		if err != nil {
+			log.Panicf("%s", err)
+		}
+		_ = ingest
 		w, err := web.New(web.Config{
 			Logger:     log,
 			ListenAddr: c.String("listen-addr"),
+			Stats:      st,
 		}, webContent)
 		if err != nil {
 			log.Panicf("error starting web listener: %s", err)

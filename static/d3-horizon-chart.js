@@ -51,7 +51,7 @@ function horizonChart () {
             .text(
                 " " + (Math.min(...data)).toFixed(2) + "/"
                 + (data.reduce((a, b) => a + b, 0) / data.length).toFixed(2) + "/"
-                + (Math.max(...data)).toFixed() + unit);
+                + (Math.max(...data)).toFixed(2) + unit);
         var context = canvas.node().getContext('2d');
         //context.imageSmoothingEnabled = false;
         //context.translate(margin.left, margin.top);

@@ -27,7 +27,7 @@ type runtimeStats struct {
 }
 
 var MemStats runtime.MemStats
-var stats = runtimeStats{
+var procstats = runtimeStats{
 	RuntimeGC:    make([]float32, frameGraphProbes),
 	HeapHistory:  make([]float32, frameGraphProbes),
 	CPUSys:       make([]float32, frameGraphProbes),
@@ -37,32 +37,32 @@ var stats = runtimeStats{
 
 func updateGC() {
 	runtime.ReadMemStats(&MemStats)
-	stats.RuntimeGC[stats.Frames%frameGraphProbes] = float32(MemStats.NumGC - stats.PrevGCCount)
-	stats.HeapHistory[stats.Frames%frameGraphProbes] = float32(MemStats.HeapInuse)
-	stats.PauseMax = 0
+	procstats.RuntimeGC[procstats.Frames%frameGraphProbes] = float32(MemStats.NumGC - procstats.PrevGCCount)
+	procstats.HeapHistory[procstats.Frames%frameGraphProbes] = float32(MemStats.HeapInuse)
+	procstats.PauseMax = 0
 	for idx, p := range MemStats.PauseNs {
 		us := float32(p / 1000)
-		stats.PauseHistory[idx] = us
-		if stats.PauseMax < us {
-			stats.PauseMax = us
+		procstats.PauseHistory[idx] = us
+		if procstats.PauseMax < us {
+			procstats.PauseMax = us
 		}
 	}
 	var rusage syscall.Rusage
 	now := time.Now()
-	timediff := now.Sub(stats.PrevTS)
-	stats.PrevTS = now
+	timediff := now.Sub(procstats.PrevTS)
+	procstats.PrevTS = now
 	syscall.Getrusage(syscall.RUSAGE_SELF, &rusage)
-	SysCPUUsage := rusage.Stime.Nano() - stats.PrevCPUSys
-	UserCPUUsage := rusage.Utime.Nano() - stats.PrevCPUUser
-	stats.PrevCPUSys = rusage.Stime.Nano()
-	stats.PrevCPUUser = rusage.Utime.Nano()
+	SysCPUUsage := rusage.Stime.Nano() - procstats.PrevCPUSys
+	UserCPUUsage := rusage.Utime.Nano() - procstats.PrevCPUUser
+	procstats.PrevCPUSys = rusage.Stime.Nano()
+	procstats.PrevCPUUser = rusage.Utime.Nano()
 	// integer division first in case we get called often, not wanna lose accuracy in floats
-	stats.CPUSys[stats.Frames%frameGraphProbes] = float32(SysCPUUsage/timediff.Microseconds()) / 1000
-	stats.CPUUser[stats.Frames%frameGraphProbes] = float32(UserCPUUsage/timediff.Microseconds()) / 1000
-	stats.Frames++
-	stats.PrevGCCount = MemStats.NumGC
+	procstats.CPUSys[procstats.Frames%frameGraphProbes] = float32(SysCPUUsage/timediff.Microseconds()) / 1000
+	procstats.CPUUser[procstats.Frames%frameGraphProbes] = float32(UserCPUUsage/timediff.Microseconds()) / 1000
+	procstats.Frames++
+	procstats.PrevGCCount = MemStats.NumGC
 }
 func (b *WebBackend) GCStats(c *gin.Context) {
 	// should probably be in lock but whatever
-	c.JSON(http.StatusOK, stats)
+	c.JSON(http.StatusOK, procstats)
 }
