@@ -71,9 +71,9 @@ func TestToplist(t *testing.T) {
 func BenchmarkToplist_Add(b *testing.B) {
 	sizes := []int{
 		32,
-		64,
 		128,
-		256,
+		512,
+		2048,
 	}
 	multiplier := []int{
 		2,
@@ -82,6 +82,15 @@ func BenchmarkToplist_Add(b *testing.B) {
 		16,
 	}
 	for _, size := range sizes {
+		b.Run(
+			fmt.Sprintf("size: %d, buffer: default", size),
+			func(b *testing.B) {
+				list := New(size, time.Second)
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					list.Add(strconv.Itoa(i))
+				}
+			})
 		for _, mult := range multiplier {
 			bufferSize := size * mult
 			b.Run(
