@@ -1,6 +1,7 @@
 package toplist
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
@@ -68,13 +69,30 @@ func TestToplist(t *testing.T) {
 }
 
 func BenchmarkToplist_Add(b *testing.B) {
-	list := New(128, time.Second)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		list.Add(strconv.Itoa(i))
+	sizes := []int{
+		32,
+		64,
+		128,
+		256,
 	}
-	//b.StopTimer()
-	//list.recalculate()
-	//_, out := list.List()
-	//b.Logf("top %+v", out)
+	multiplier := []int{
+		2,
+		4,
+		8,
+		16,
+	}
+	for _, size := range sizes {
+		for _, mult := range multiplier {
+			bufferSize := size * mult
+			b.Run(
+				fmt.Sprintf("size: %d, buffer: %d", size, bufferSize),
+				func(b *testing.B) {
+					list := New(size, time.Second, bufferSize)
+					b.ResetTimer()
+					for i := 0; i < b.N; i++ {
+						list.Add(strconv.Itoa(i))
+					}
+				})
+		}
+	}
 }

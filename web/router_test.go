@@ -1,6 +1,8 @@
 package web
 
 import (
+	"github.com/efigence/go-haproxy"
+	"github.com/efigence/hamon/stats"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,14 +23,17 @@ func testServer(eng *gin.Engine, req *http.Request) *httptest.ResponseRecorder {
 }
 
 func TestWebBackend_Run(t *testing.T) {
+	reqCh := make(chan haproxy.HTTPRequest)
+	st := stats.New(reqCh)
+	r, _ := http.NewRequest("GET", "/", nil)
 	backend, err := New(Config{
 		Logger:     zaptest.NewLogger(t).Sugar(),
 		ListenAddr: "0.0.0.0",
+		Stats:      st,
 	},
 		webContent,
 	)
 	require.Nil(t, err)
-	r, _ := http.NewRequest("GET", "/", nil)
 	t1 := testServer(backend.r, r)
 	b, _ := ioutil.ReadAll(t1.Body)
 	assert.Contains(t, string(b), "<head>")

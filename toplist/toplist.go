@@ -28,31 +28,37 @@ func New(size int, decay time.Duration, bufferSize ...int) *Toplist {
 		topList:    make(map[string]*ewma.EwmaRate, size),
 	}
 	if len(bufferSize) < 1 && t.bufferSize < size*4 {
-		t.bufferSize = size * 128
+		if size < 1024 {
+			t.bufferSize = size * 16
+		} else {
+			t.bufferSize = size * 8
+		}
 	} else {
 		t.bufferSize = bufferSize[0]
 	}
+	t.events = make([]string, t.bufferSize)
 	return &t
 }
 
 func (t *Toplist) Add(s string) {
 	t.Lock()
-	if len(t.events) > t.bufferSize {
+	if t.eventsIdx > t.bufferSize-1 {
 		t.Unlock()
 		t.recalculate()
 		t.Lock()
 	}
-	t.events = append(t.events, s)
-	defer t.Unlock()
+	t.events[t.eventsIdx] = s
+	t.eventsIdx++
+	t.Unlock()
 
 }
 func (t *Toplist) recalculate() {
 	t.Lock()
 	m := make(map[string]int)
-	for _, s := range t.events {
+	for _, s := range t.events[:t.eventsIdx] {
 		m[s]++
 	}
-	t.events = []string{}
+	t.eventsIdx = 0
 	t.Unlock()
 	t.toplistLock.Lock()
 	defer t.toplistLock.Unlock()
