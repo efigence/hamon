@@ -10,22 +10,28 @@ const probes = 1024
 const interval = time.Second
 
 type Stats struct {
-	f_total_ewma       map[string]*ewma.Ewma
-	FrontendDurationMs map[string][]float64 `json:"frontend_duration_ms"`
+	f_total_ewma        map[string]*ewma.Ewma
+	f_rate              map[string]*ewma.EwmaRate
+	FrontendDurationMs  map[string][]float64 `json:"frontend_duration_ms"`
+	FrontendRequestRate map[string][]float64 `json:"frontend_request_rate"`
 }
 
 func New(ch chan haproxy.HTTPRequest) *Stats {
 	s := &Stats{
-		f_total_ewma:       make(map[string]*ewma.Ewma, 0),
-		FrontendDurationMs: map[string][]float64{},
+		f_total_ewma:        make(map[string]*ewma.Ewma, 0),
+		f_rate:              make(map[string]*ewma.EwmaRate, 0),
+		FrontendDurationMs:  map[string][]float64{},
+		FrontendRequestRate: map[string][]float64{},
 	}
 	go func() {
 		for ev := range ch {
 			if _, ok := s.f_total_ewma[ev.FrontendName]; !ok {
 				s.f_total_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
+				s.f_rate[ev.FrontendName] = ewma.NewEwmaRate(interval * 1)
 				s.f_total_ewma[ev.FrontendName].Set(float64(ev.TotalDurationMs), time.Now())
 			}
 			s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.TotalDurationMs))
+			s.f_rate[ev.FrontendName].UpdateNow()
 		}
 	}()
 	go func() {
@@ -36,8 +42,15 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 			for k, v := range s.f_total_ewma {
 				if _, ok := s.FrontendDurationMs[k]; !ok {
 					s.FrontendDurationMs[k] = make([]float64, probes)
+					s.FrontendRequestRate[k] = make([]float64, probes)
 				}
-				s.FrontendDurationMs[k][i%probes] = v.Current
+				// this is for rolling pointer
+				//s.FrontendDurationMs[k][i%probes] = v.Current
+				//s.FrontendRequestRate[k][i%probes] = s.f_rate[k].CurrentNow()
+
+				// this is for new data coming from the left
+				s.FrontendDurationMs[k] = append([]float64{v.Current}, s.FrontendDurationMs[k][:len(s.FrontendDurationMs[k])-1]...)
+				s.FrontendRequestRate[k] = append([]float64{s.f_rate[k].CurrentNow()}, s.FrontendRequestRate[k][:len(s.FrontendRequestRate[k])-1]...)
 			}
 		}
 	}()

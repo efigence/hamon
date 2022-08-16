@@ -43,40 +43,55 @@ var chartCPUSys =
 var chartTimeMs =
     d3.horizonChart()
         .height(20)
-        .unit("ms")
+        .unit(" ms")
 //        .min_extent([0,10])
         .colors(pallete_rainbow);
+var chartReq = d3.horizonChart()
+    .height(20)
+    .unit(" rps")
+    //.min_extent([0,1])
+    .colors(pallete_blues)
+dataHash={};
+dataHashUpdater={};
+function dataCache(path) {
+    if ( !dataHashUpdater[path] ) {
+        dataHashUpdater[path] = 1
+        d3.json(path, function (data) {
+            dataHash[path] = data
+        })
+        setInterval(function () {
+            d3.json(path, function (data) {
+                dataHash[path] = data
+            })
+        },940 + (Math.random()*20))
+    }
+}
 
+
+dataCache("/gcstat");
 setInterval(function() {
-    d3.json("/gcstat",function(data) {
+    data = dataHash["/gcstat"];
         heapDiv
             .data([data['heap_history'].map(x => x / 1024 / 1024)])
             .each(chartBytes);
-    });
-    d3.json("/gcstat",function(data) {
         pauseDiv
             .data([data['pause_history']])
             .each(chartTime);
-    });
-    d3.json("/gcstat",function(data) {
         cpuUserDiv
             .data([data['cpu_user']])
             .each(chartCPU);
-    });
-    d3.json("/gcstat",function(data) {
         cpuSysDiv
             .data([data['cpu_sys']])
             .each(chartCPUSys);
-    });
-
 },950);
-function runGraph(path, key,key2, role) {
+
+function runGraph(graphTemplate,path, key,key2, role) {
     var div =  d3.select('[role="' + role + '"]');
+    dataCache(path);
     setInterval(function () {
-        d3.json(path, function (data) {
-            div
-                .data([data[key][key2]])
-                .each(chartTimeMs);
-        });
-    },950)
+        data = dataHash[path]
+        div
+            .data([data[key][key2]])
+            .each(graphTemplate);
+    },940 + (Math.random()*20));
 }

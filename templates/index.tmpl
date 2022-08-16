@@ -33,8 +33,14 @@
     {{range .frontend_list}}
     <tr>
         <td>{{.}}</td>
-        <td><div role="front_{{.}}"><canvas height="20" width="256"></canvas></div></td>
-        <script>runGraph("/stats/frontend","frontend_duration_ms","{{.}}","front_{{.}}")</script>
+        <td>
+            <div role="front_{{.}}"><canvas height="20" width="256"></canvas></div>
+            <div role="front_rate_{{.}}"><canvas height="20" width="256"></canvas></div>
+        </td>
+        <script>
+            runGraph(chartTimeMs,"/stats/frontend","frontend_duration_ms","{{.}}","front_{{.}}")
+            runGraph(chartReq,"/stats/frontend","frontend_request_rate","{{.}}","front_rate_{{.}}")
+        </script>
     </tr>
     {{end}}
 </table>
