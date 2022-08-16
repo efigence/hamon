@@ -12,3 +12,6 @@ body {
     /*--root-fg: #aaaaff;*/
     --root-fg: #ffffff;
 }
+td {
+    border-bottom: 1px solid var(--root-gr-bg2);
+}

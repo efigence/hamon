@@ -37,19 +37,19 @@ var chartCPUSys =
     d3.horizonChart()
         .height(20)
         .unit("s")
-        .min_extent([0,4])
+        .min_extent([0,10])
         .colors(pallete_oranges);
 
 var chartTimeMs =
     d3.horizonChart()
         .height(20)
         .unit(" ms")
-//        .min_extent([0,10])
+        .min_extent([0,50])
         .colors(pallete_rainbow);
 var chartReq = d3.horizonChart()
     .height(20)
     .unit(" rps")
-    //.min_extent([0,1])
+    .min_extent([0,1])
     .colors(pallete_blues)
 dataHash={};
 dataHashUpdater={};

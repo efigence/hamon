@@ -60,10 +60,10 @@ function horizonChart () {
         var _extent = extent || d3Array.extent(data);
         if (min_extent?.length >= 1) {
            if(!isNaN(min_extent[0])) {
-               _extent[0] = Math.Min(_extent[0],min_extent[0]);
+               _extent[0] = Math.min(_extent[0],min_extent[0]);
            }
             if(min_extent?.length >= 2 && !isNaN(min_extent[1])) {
-               _extent[1] = Math.Min(_extent[1],min_extent[1]);
+               _extent[1] = Math.max(_extent[1],min_extent[1]);
            }
         }
 
