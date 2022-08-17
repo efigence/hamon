@@ -3,6 +3,7 @@ package stats
 import (
 	"github.com/efigence/go-haproxy"
 	"github.com/efigence/go-libs/ewma"
+	"github.com/efigence/hamon/toplist"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type Stats struct {
 	f_rate              map[string]*ewma.EwmaRate
 	FrontendDurationMs  map[string][]float64 `json:"frontend_duration_ms"`
 	FrontendRequestRate map[string][]float64 `json:"frontend_request_rate"`
+	FrontendTopRequest  map[string]*toplist.Toplist
 }
 
 func New(ch chan haproxy.HTTPRequest) *Stats {
@@ -22,6 +24,7 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 		f_rate:              make(map[string]*ewma.EwmaRate, 0),
 		FrontendDurationMs:  map[string][]float64{},
 		FrontendRequestRate: map[string][]float64{},
+		FrontendTopRequest:  map[string]*toplist.Toplist{},
 	}
 	go func() {
 		for ev := range ch {
@@ -29,9 +32,12 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 				s.f_total_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
 				s.f_rate[ev.FrontendName] = ewma.NewEwmaRate(interval * 1)
 				s.f_total_ewma[ev.FrontendName].Set(float64(ev.TotalDurationMs), time.Now())
+				s.FrontendTopRequest[ev.FrontendName] = toplist.New(20, time.Minute, 2048)
+
 			}
 			s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.TotalDurationMs))
 			s.f_rate[ev.FrontendName].UpdateNow()
+			s.FrontendTopRequest[ev.FrontendName].Add(ev.ClientIP)
 		}
 	}()
 	go func() {

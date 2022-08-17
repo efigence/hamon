@@ -86,6 +86,7 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 	})
 	r.GET("/gcstat", w.GCStats)
 	r.GET("/stats/frontend", w.FrontendStats)
+	r.GET("/stats/frontend/:name", w.FrontendTop)
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.tmpl", gin.H{
 			"notfound": c.Request.URL.Path,
