@@ -30,12 +30,15 @@ func TestToplist(t *testing.T) {
 	}
 	list.recalculate()
 	order, out := list.List()
+	// the initial addition to the toplist is damped to avoid spiky behaviour
+	// that happens wheyn say a bunch of HTTP/2.0 connections get recorded
+	// in same sample packet but actual rate over time is lower
 	assert.Equal(t, []string{"1.2.3.4", "2.2.3.4", "3.2.3.4", "4.2.3.4"}, order)
 	assert.InDeltaMapValues(t, map[string]float64{
-		"1.2.3.4": 4.0,
-		"2.2.3.4": 3.0,
-		"3.2.3.4": 2.0,
-		"4.2.3.4": 1.0,
+		"1.2.3.4": 2.0,
+		"2.2.3.4": 1.5,
+		"3.2.3.4": 1.0,
+		"4.2.3.4": 0.5,
 	}, out, 0.01)
 
 	list.lastRecalc = time.Now().Add(time.Second * -1)
@@ -45,10 +48,10 @@ func TestToplist(t *testing.T) {
 	list.recalculate()
 	order, out = list.List()
 	assert.InDeltaMapValues(t, map[string]float64{
-		"1.2.3.4": 4.0,
-		"2.2.3.4": 3.0,
-		"3.2.3.4": 2.0,
-		"5.2.3.4": 3.0,
+		"1.2.3.4": 2.0,
+		"2.2.3.4": 1.5,
+		"3.2.3.4": 1.0,
+		"5.2.3.4": 1.5,
 	}, out, 0.01)
 	//	assert.Equal(t, []string{"1.2.3.4", "2.2.3.4", "3.2.3.4", "4.2.3.4"}, order)
 	list.lastRecalc = time.Now().Add(time.Second * -1)
@@ -58,13 +61,13 @@ func TestToplist(t *testing.T) {
 	list.Add("4.2.3.4")
 	list.recalculate()
 	order, out = list.List()
-	assert.InDelta(t, list.topList["4.2.3.4"].CurrentNow(), 3.0, 0.1, "4.2.3.4")
-	assert.InDelta(t, out["1.2.3.4"], 4.0, 0.1, "1.2.3.4")
-	assert.InDelta(t, out["2.2.3.4"], 3.6, 0.1, "2.2.3.4")
-	assert.InDelta(t, out["4.2.3.4"], 3.0, 0.1, "5.2.3.4")
-	assert.InDelta(t, out["5.2.3.4"], 3.0, 0.1, "3.2.3.4")
-
-	assert.Equal(t, []string{"1.2.3.4", "2.2.3.4", "4.2.3.4", "5.2.3.4"}, order)
+	assert.InDeltaMapValues(t, map[string]float64{
+		"1.2.3.4": 2.0,
+		"2.2.3.4": 2.0,
+		"4.2.3.4": 2.0,
+		"5.2.3.4": 1.5,
+	}, out, 0.01)
+	assert.Equal(t, []string{"4.2.3.4", "2.2.3.4", "1.2.3.4", "5.2.3.4"}, order)
 
 }
 
