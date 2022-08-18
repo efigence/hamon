@@ -3,7 +3,7 @@ module github.com/efigence/hamon
 go 1.16
 
 require (
-	github.com/efigence/go-haproxy v0.0.1
+	github.com/efigence/go-haproxy v0.0.4
 	github.com/efigence/go-libs v0.0.1 // indirect
 	github.com/efigence/go-libs/ewma v0.0.0-20220816123911-60e483f7128c
 	github.com/efigence/go-mon v1.3.1

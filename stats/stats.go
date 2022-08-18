@@ -28,14 +28,28 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 	}
 	go func() {
 		for ev := range ch {
+			// ignore duration on bad requests
+			// we're interested whether backend responds
+			// this is mostly done to ignore browser preflight connections
+			ignoreDuration := false
+			if ev.BadReq && ev.ServerName == "<NOSRV>" {
+				if ev.TerminationReason == haproxy.TerminationClientAbort ||
+					ev.TerminationReason == haproxy.TerminationClientWait {
+					ignoreDuration = true
+				}
+			}
 			if _, ok := s.f_total_ewma[ev.FrontendName]; !ok {
 				s.f_total_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
 				s.f_rate[ev.FrontendName] = ewma.NewEwmaRate(interval * 1)
-				s.f_total_ewma[ev.FrontendName].Set(float64(ev.TotalDurationMs), time.Now())
+				if !ignoreDuration {
+					s.f_total_ewma[ev.FrontendName].Set(float64(ev.TotalDurationMs), time.Now())
+				}
 				s.FrontendTopRequest[ev.FrontendName] = toplist.New(20, time.Minute, 2048)
 
 			}
-			s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.TotalDurationMs))
+			if !ignoreDuration {
+				s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.TotalDurationMs))
+			}
 			s.f_rate[ev.FrontendName].UpdateNow()
 			s.FrontendTopRequest[ev.FrontendName].Add(ev.ClientIP)
 		}
