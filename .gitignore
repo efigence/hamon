@@ -45,6 +45,7 @@ _testmain.go
 *.out
 *.static
 hamon
+hamon-*
 *.arm
 *.arm64
 *.386
