@@ -42,13 +42,13 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 				s.f_total_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
 				s.f_rate[ev.FrontendName] = ewma.NewEwmaRate(interval * 1)
 				if !ignoreDuration {
-					s.f_total_ewma[ev.FrontendName].Set(float64(ev.TotalDurationMs), time.Now())
+					s.f_total_ewma[ev.FrontendName].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
 				}
 				s.FrontendTopRequest[ev.FrontendName] = toplist.New(20, time.Minute, 2048)
 
 			}
 			if !ignoreDuration {
-				s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.TotalDurationMs))
+				s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.ResponseHeaderDurationMs))
 			}
 			s.f_rate[ev.FrontendName].UpdateNow()
 			s.FrontendTopRequest[ev.FrontendName].Add(ev.ClientIP)
