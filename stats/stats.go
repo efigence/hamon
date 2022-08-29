@@ -11,20 +11,24 @@ const probes = 1024
 const interval = time.Second
 
 type Stats struct {
-	f_total_ewma        map[string]*ewma.Ewma
-	f_rate              map[string]*ewma.EwmaRate
-	FrontendDurationMs  map[string][]float64 `json:"frontend_duration_ms"`
-	FrontendRequestRate map[string][]float64 `json:"frontend_request_rate"`
-	FrontendTopRequest  map[string]*toplist.Toplist
+	f_total_ewma               map[string]*ewma.Ewma
+	f_response_ewma            map[string]*ewma.Ewma
+	f_rate                     map[string]*ewma.EwmaRate
+	FrontendDurationMs         map[string][]float64        `json:"frontend_duration_ms"`
+	FrontendResponseDurationMs map[string][]float64        `json:"frontend_response_duration_ms"`
+	FrontendRequestRate        map[string][]float64        `json:"frontend_request_rate"`
+	FrontendTopRequest         map[string]*toplist.Toplist `json:"frontend_top_request"`
 }
 
 func New(ch chan haproxy.HTTPRequest) *Stats {
 	s := &Stats{
-		f_total_ewma:        make(map[string]*ewma.Ewma, 0),
-		f_rate:              make(map[string]*ewma.EwmaRate, 0),
-		FrontendDurationMs:  map[string][]float64{},
-		FrontendRequestRate: map[string][]float64{},
-		FrontendTopRequest:  map[string]*toplist.Toplist{},
+		f_total_ewma:               make(map[string]*ewma.Ewma, 0),
+		f_response_ewma:            make(map[string]*ewma.Ewma, 0),
+		f_rate:                     make(map[string]*ewma.EwmaRate, 0),
+		FrontendDurationMs:         map[string][]float64{},
+		FrontendResponseDurationMs: map[string][]float64{},
+		FrontendRequestRate:        map[string][]float64{},
+		FrontendTopRequest:         map[string]*toplist.Toplist{},
 	}
 	go func() {
 		for ev := range ch {
@@ -38,20 +42,24 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 					ignoreDuration = true
 				}
 			}
-			if ev.ResponseHeaderDurationMs < 0 {
-				ignoreDuration = true
-			}
 			if _, ok := s.f_total_ewma[ev.FrontendName]; !ok {
 				s.f_total_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
+				s.f_response_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
 				s.f_rate[ev.FrontendName] = ewma.NewEwmaRate(interval * 1)
 				if !ignoreDuration {
-					s.f_total_ewma[ev.FrontendName].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
+					s.f_total_ewma[ev.FrontendName].Set(float64(ev.TotalDurationMs), time.Now())
+					if ev.ResponseHeaderDurationMs > 0 {
+						s.f_response_ewma[ev.FrontendName].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
+					}
 				}
 				s.FrontendTopRequest[ev.FrontendName] = toplist.New(20, time.Minute, 2048)
 
 			}
 			if !ignoreDuration {
-				s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.ResponseHeaderDurationMs))
+				s.f_total_ewma[ev.FrontendName].UpdateNow(float64(ev.TotalDurationMs))
+				if ev.ResponseHeaderDurationMs > 0 {
+					s.f_response_ewma[ev.FrontendName].UpdateNow(float64(ev.ResponseHeaderDurationMs))
+				}
 			}
 			s.f_rate[ev.FrontendName].UpdateNow()
 			s.FrontendTopRequest[ev.FrontendName].Add(ev.ClientIP)
@@ -65,6 +73,7 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 			for k, v := range s.f_total_ewma {
 				if _, ok := s.FrontendDurationMs[k]; !ok {
 					s.FrontendDurationMs[k] = make([]float64, probes)
+					s.FrontendResponseDurationMs[k] = make([]float64, probes)
 					s.FrontendRequestRate[k] = make([]float64, probes)
 				}
 				// this is for rolling pointer
@@ -73,6 +82,7 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 
 				// this is for new data coming from the left
 				s.FrontendDurationMs[k] = append([]float64{v.Current}, s.FrontendDurationMs[k][:len(s.FrontendDurationMs[k])-1]...)
+				s.FrontendResponseDurationMs[k] = append([]float64{v.Current}, s.FrontendResponseDurationMs[k][:len(s.FrontendResponseDurationMs[k])-1]...)
 				s.FrontendRequestRate[k] = append([]float64{s.f_rate[k].CurrentNow()}, s.FrontendRequestRate[k][:len(s.FrontendRequestRate[k])-1]...)
 			}
 		}

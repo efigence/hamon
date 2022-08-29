@@ -15,3 +15,19 @@ body {
 td {
     border-bottom: 1px solid var(--root-gr-bg2);
 }
+a {
+  color: #aaf;
+  text-decoration: none;
+}
+ a:hover{ text-decoration: none; }
+/* Full-width inputs */
+.button {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #55c;
+  box-sizing: border-box;
+  background-color: #26365d;
+  color: white;
+}
