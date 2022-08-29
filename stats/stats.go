@@ -38,6 +38,9 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 					ignoreDuration = true
 				}
 			}
+			if ev.ResponseHeaderDurationMs < 0 {
+				ignoreDuration = true
+			}
 			if _, ok := s.f_total_ewma[ev.FrontendName]; !ok {
 				s.f_total_ewma[ev.FrontendName] = ewma.NewEwma(interval * 1)
 				s.f_rate[ev.FrontendName] = ewma.NewEwmaRate(interval * 1)
