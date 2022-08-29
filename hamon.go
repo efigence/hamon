@@ -6,6 +6,8 @@ import (
 	ingest "github.com/efigence/hamon/ingest"
 	"github.com/efigence/hamon/stats"
 	"github.com/efigence/hamon/web"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/urfave/cli"
@@ -75,12 +77,25 @@ func main() {
 			Usage:  "Listen addr",
 			EnvVar: "LISTEN_ADDR",
 		},
+		cli.StringFlag{
+			Name:  "debug-addr",
+			Usage: "start debug server (pprof) on that [ip]:port",
+			Value: "",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		if c.Bool("help") {
 			cli.ShowAppHelp(c)
 			os.Exit(1)
 		}
+		if len(c.String("debug-addr")) > 0 {
+			go func() {
+				log.Infof("Running debug/pprof on port %s", c.String("debug-port"))
+				log.Errorf("Error when listening on debug port: %s", http.ListenAndServe(c.String("debug-addr"), nil))
+				os.Exit(1)
+			}()
+		}
+
 		ingest, reqCh, err := ingest.New(ingest.Config{
 			ListenAddr: "127.0.0.1:50514",
 			Logger:     log,
