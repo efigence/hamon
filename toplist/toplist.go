@@ -86,9 +86,14 @@ func (t *Toplist) recalculate() {
 		if _, ok := t.topList[k]; ok {
 			t.topList[k].UpdateValueNow(float64(m[k]))
 		} else {
-			perSecond := float64(m[k]) / diffSec
+			initValue := float64(m[k])
+			// we dont do sub-second diffs in initialization
+			// because that has nasty habit of turning short intervals into spike
+			if diffSec > 1 {
+				initValue = initValue / diffSec
+			}
 			t.topList[k] = ewma.NewEwmaRate(t.decay)
-			t.topList[k].Set(perSecond, time.Now())
+			t.topList[k].Set(initValue, time.Now().Add(t.decay*-1))
 		}
 	}
 	if len(t.topList) > t.bufferSize {
