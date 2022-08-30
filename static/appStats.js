@@ -68,9 +68,9 @@ function dataCache(path) {
 }
 
 
-dataCache("/gcstat");
+dataCache("/v1/gcstat");
 setInterval(function() {
-    data = dataHash["/gcstat"];
+    data = dataHash["/v1/gcstat"];
         heapDiv
             .data([data['heap_history'].map(x => x / 1024 / 1024)])
             .each(chartBytes);

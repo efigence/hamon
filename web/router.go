@@ -72,7 +72,7 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 	})
 	r.GET("/", func(c *gin.Context) {
 		keys := make([]string, 0)
-		for k := range w.stats.FrontendDurationMs {
+		for k := range w.stats.Frontends.TotalDurationMs {
 			if k == "" {
 				continue
 			}
@@ -84,10 +84,10 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 			"frontend_list": keys,
 		})
 	})
-	r.GET("/gcstat", w.GCStats)
-	r.GET("/stats/frontend", w.FrontendStats)
-	r.GET("/stats/frontend/top/:name", w.FrontendTop)
-	r.GET("/stats/top_ip/:rate", w.TopRate)
+	r.GET("/v1/gcstat", w.GCStats)
+	r.GET("/v1/stats/frontend", w.FrontendStats)
+	r.GET("/v1/stats/frontend/top/:name", w.FrontendTop)
+	r.GET("/v1/stats/top_ip/:rate", w.TopRate)
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.tmpl", gin.H{
 			"notfound": c.Request.URL.Path,
