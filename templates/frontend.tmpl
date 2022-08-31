@@ -8,7 +8,34 @@
     <title>{{ .title }}</title>
 </head>
 <body>
+<table>
+    <tr>
+        <td>Heap</td>
+        <td><div role="heap_history">
+                <canvas height="20" width="256"></canvas>
+            </div></td>
+        <td rowspan="4">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+        <td rowspan="4">
+            <b>Frontend [{{.frontend}}] stats</b><br>
+            total, request, response duration, then request rate<br>
+            <a href="/v1/stats/frontend/top/{{.frontend}}">Top IPs</a>
+        </td>
+    </tr>
+    <tr>
+        <td>Pause</td>
+        <td><div role="pause_history"><canvas height="20" width="256"></canvas></div></td>
+    </tr>
+    <tr>
+        <td>CPU User</td>
+        <td><div role="cpu_user_history"><canvas height="20" width="256"></canvas></div></td>
+    </tr>
+    <tr>
+        <td>Cpu Sys</td>
+        <td><div role="cpu_sys_history"><canvas height="20" width="256"></canvas></div></td>
+    </tr>
+</table>
 <script src="/s/appStats.js"></script>
+
 <table>
       {{ $frontend := .frontend }}
       {{range .backends}}

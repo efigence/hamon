@@ -49,8 +49,8 @@ func newStatBlock() *StatBlock {
 
 				// this is for new data coming from the left
 				sb.TotalDurationMs[k] = append([]float64{v.Current}, sb.TotalDurationMs[k][:len(sb.TotalDurationMs[k])-1]...)
-				sb.RequestDurationMs[k] = append([]float64{v.Current}, sb.RequestDurationMs[k][:len(sb.RequestDurationMs[k])-1]...)
-				sb.ResponseDurationMs[k] = append([]float64{v.Current}, sb.ResponseDurationMs[k][:len(sb.ResponseDurationMs[k])-1]...)
+				sb.RequestDurationMs[k] = append([]float64{sb.request_ewma[k].Current}, sb.RequestDurationMs[k][:len(sb.RequestDurationMs[k])-1]...)
+				sb.ResponseDurationMs[k] = append([]float64{sb.response_ewma[k].Current}, sb.ResponseDurationMs[k][:len(sb.ResponseDurationMs[k])-1]...)
 				sb.RequestRate[k] = append([]float64{sb.rate[k].CurrentNow()}, sb.RequestRate[k][:len(sb.RequestRate[k])-1]...)
 
 			}
