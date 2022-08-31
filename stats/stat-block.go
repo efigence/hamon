@@ -4,6 +4,8 @@ import (
 	"github.com/efigence/go-haproxy"
 	"github.com/efigence/go-libs/ewma"
 	"github.com/efigence/hamon/toplist"
+	"github.com/montanaflynn/stats"
+	"sync"
 	"time"
 )
 
@@ -17,6 +19,9 @@ type StatBlock struct {
 	ResponseDurationMs map[string][]float64        `json:"response_duration_ms"`
 	RequestRate        map[string][]float64        `json:"request_rate"`
 	TopRequest         map[string]*toplist.Toplist `json:"top_request"`
+	Slowlog            map[string][]haproxy.HTTPRequest
+	Pct75th            map[string]float64 `json:"75th"`
+	sync.RWMutex
 }
 
 func newStatBlock() *StatBlock {
@@ -30,6 +35,8 @@ func newStatBlock() *StatBlock {
 		ResponseDurationMs: map[string][]float64{},
 		RequestRate:        map[string][]float64{},
 		TopRequest:         map[string]*toplist.Toplist{},
+		Slowlog:            map[string][]haproxy.HTTPRequest{},
+		Pct75th:            map[string]float64{},
 	}
 	go func() {
 		i := 0
@@ -52,7 +59,9 @@ func newStatBlock() *StatBlock {
 				sb.RequestDurationMs[k] = append([]float64{sb.request_ewma[k].Current}, sb.RequestDurationMs[k][:len(sb.RequestDurationMs[k])-1]...)
 				sb.ResponseDurationMs[k] = append([]float64{sb.response_ewma[k].Current}, sb.ResponseDurationMs[k][:len(sb.ResponseDurationMs[k])-1]...)
 				sb.RequestRate[k] = append([]float64{sb.rate[k].CurrentNow()}, sb.RequestRate[k][:len(sb.RequestRate[k])-1]...)
-
+				sb.Lock()
+				sb.Pct75th[k], _ = stats.Percentile(sb.TotalDurationMs[k], 75)
+				sb.Unlock()
 			}
 		}
 
@@ -73,6 +82,8 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 		sb.request_ewma[name] = ewma.NewEwma(interval * 1)
 		sb.response_ewma[name] = ewma.NewEwma(interval * 1)
 		sb.rate[name] = ewma.NewEwmaRate(interval * 1)
+		sb.Slowlog[name] = []haproxy.HTTPRequest{}
+		sb.Pct75th[name] = float64(ev.TotalDurationMs)
 		if !ignoreDuration {
 			sb.total_ewma[name].Set(float64(ev.TotalDurationMs), time.Now())
 			if ev.RequestHeaderDurationMs > 0 {
@@ -96,4 +107,21 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 	}
 	sb.rate[name].UpdateNow()
 	sb.TopRequest[name].Add(ev.ClientIP)
+	sb.RLock()
+	defer sb.RUnlock()
+	if float64(ev.TotalDurationMs) > sb.Pct75th[name] {
+		sb.Slowlog[name] = append(sb.Slowlog[name], ev)
+	}
+	if len(sb.Slowlog[name]) > (slowReqLogSize * 4) {
+		sortSlowlog(sb.Slowlog[name], time.Now().Add(probes*interval*-1))
+		sb.Slowlog[name] = sb.Slowlog[name][:slowReqLogSize*2]
+	}
+}
+
+func (sb *StatBlock) GetSlowlog(frontend string) []haproxy.HTTPRequest {
+	if len(sb.Slowlog[frontend]) > slowReqLogSize {
+		return sb.Slowlog[frontend][:slowReqLogSize-1]
+	} else {
+		return sb.Slowlog[frontend]
+	}
 }

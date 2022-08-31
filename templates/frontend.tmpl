@@ -48,10 +48,10 @@
             <div role="b_rate_{{.}}"><canvas height="20" width="256"></canvas></div>
         </td>
     <script>
-        runGraph(chartTimeMs,"/v1/stats/frontend/{{$frontend}}","total_duration_ms","{{.}}","b_total_{{.}}")
-        runGraph(chartTimeMs,"/v1/stats/frontend/{{$frontend}}","request_duration_ms","{{.}}","b_req_{{.}}")
-        runGraph(chartTimeMs,"/v1/stats/frontend/{{$frontend}}","response_duration_ms","{{.}}","b_resp_{{.}}")
-        runGraph(chartReq,"/v1/stats/frontend/{{$frontend}}","request_rate","{{.}}","b_rate_{{.}}")
+        runGraph(chartTimeMs,"/v1/stats/frontend/rate/{{$frontend}}","total_duration_ms","{{.}}","b_total_{{.}}")
+        runGraph(chartTimeMs,"/v1/stats/frontend/rate/{{$frontend}}","request_duration_ms","{{.}}","b_req_{{.}}")
+        runGraph(chartTimeMs,"/v1/stats/frontend/rate/{{$frontend}}","response_duration_ms","{{.}}","b_resp_{{.}}")
+        runGraph(chartReq,"/v1/stats/frontend/rate/{{$frontend}}","request_rate","{{.}}","b_rate_{{.}}")
     </script>
     </tr>
     {{end}}

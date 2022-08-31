@@ -62,7 +62,7 @@ func updateGC() {
 	procstats.Frames++
 	procstats.PrevGCCount = MemStats.NumGC
 }
-func (b *WebBackend) GCStats(c *gin.Context) {
+func (b *WebBackend) V1GCStats(c *gin.Context) {
 	// should probably be in lock but whatever
 	c.JSON(http.StatusOK, procstats)
 }

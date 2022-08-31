@@ -84,13 +84,15 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 			"frontend_list": keys,
 		})
 	})
-	r.GET("/v1/gcstat", w.GCStats)
-	r.GET("/v1/stats/frontend", w.FrontendStats)
-	r.GET("/v1/stats/frontend/:frontend", w.FrontendBackendStats)
-	r.GET("/v1/stats/frontend/top/:name", w.FrontendTop)
-	r.GET("/v1/stats/top_ip/:rate", w.TopRate)
+	r.GET("/v1/gcstat", w.V1GCStats)
+	r.GET("/v1/stats/frontend", w.V1FrontendStats)
+	r.GET("/v1/stats/frontend/rate/:frontend", w.V1FrontendBackendStats)
+	r.GET("/v1/stats/frontend/top/:name", w.V1FrontendTop)
+	r.GET("/v1/stats/frontend/slow/:name", w.V1FrontendSlow)
+	r.GET("/v1/stats/top_ip/:rate", w.V1TopRate)
 
 	r.GET("/frontend/:name", w.Frontend)
+	r.GET("/slow/:name", w.Slow)
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.tmpl", gin.H{
 			"notfound": c.Request.URL.Path,

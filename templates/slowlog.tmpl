@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/s/s.css">
+    <script src="/s/d3.v4.min.js"></script>
+    <script src="/s/d3-horizon-chart.js"></script>
+    <title>{{ .title }}</title>
+</head>
+<body>
+<div class="slowlog">
+<table >
+    <tr>
+        <th>TS</th>
+        <th>Path</th>
+        <th>Client</th>
+        <th>Backend</th>
+        <th>Server</th>
+        <th>Conns</th>
+        <th>Tot(ms)</th>
+        <th>Req(ms)</th>
+        <th>Rsp(ms)</th>
+    </tr>
+    {{range .slow}}
+    <tr>
+        <td>
+            <div class="tooltip">
+            {{ .TS.Format "15:04:05" }}
+                <span class="tooltiptext"> {{ .TS}}</span>
+            </div>
+        </td>
+        <td>{{ .Path }}</td>
+        <td>{{ .Client }}</td>
+        <td>{{ .Backend }}</td>
+        <td>{{ .Server }}</td>
+        <td>{{ .ServerConnCount }}</td>
+        <td>{{ .TotalDurationMs }}</td>
+        <td>{{ .RequestDurationMs }}</td>
+        <td>{{ .ResponseDurationMs }}</td>
+    </tr>
+    {{ end }}
+</table>
+</div>
+</body>
+</html>

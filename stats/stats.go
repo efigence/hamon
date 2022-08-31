@@ -7,6 +7,7 @@ import (
 
 const probes = 1024
 const interval = time.Second
+const slowReqLogSize = 64
 
 type Stats struct {
 	Frontends         *StatBlock

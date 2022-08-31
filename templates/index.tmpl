@@ -41,7 +41,10 @@
 <table>
     {{range .frontend_list}}
     <tr>
-        <td><a href="/frontend/{{.}}">{{.}}</a></td>
+        <td>
+            <a href="/frontend/{{.}}">{{.}}</a><br>
+            <a href="/slow/{{.}}">🐌</a>
+        </td>
         <td>
             <div role="front_{{.}}"><canvas height="20" width="256"></canvas></div>
             <div role="front_rate_{{.}}"><canvas height="20" width="256"></canvas></div>
