@@ -75,8 +75,8 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 		sb.rate[name] = ewma.NewEwmaRate(interval * 1)
 		if !ignoreDuration {
 			sb.total_ewma[name].Set(float64(ev.TotalDurationMs), time.Now())
-			if ev.ResponseHeaderDurationMs > 0 {
-				sb.response_ewma[name].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
+			if ev.RequestHeaderDurationMs > 0 {
+				sb.request_ewma[name].Set(float64(ev.RequestHeaderDurationMs), time.Now())
 			}
 			if ev.ResponseHeaderDurationMs > 0 {
 				sb.response_ewma[name].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
@@ -87,6 +87,9 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 	}
 	if !ignoreDuration {
 		sb.total_ewma[name].UpdateNow(float64(ev.TotalDurationMs))
+		if ev.RequestHeaderDurationMs > 0 {
+			sb.request_ewma[name].UpdateNow(float64(ev.RequestHeaderDurationMs))
+		}
 		if ev.ResponseHeaderDurationMs > 0 {
 			sb.response_ewma[name].UpdateNow(float64(ev.ResponseHeaderDurationMs))
 		}

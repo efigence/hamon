@@ -51,6 +51,9 @@ func (i *Ingest) ingestor(conn *net.UDPConn, ch chan haproxy.HTTPRequest) {
 				continue
 			}
 			req, err := haproxy.DecodeHTTPLog(log_str)
+			if req.FrontendName == "" {
+				continue
+			}
 			ch <- req
 		}
 	}()

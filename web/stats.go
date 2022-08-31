@@ -8,6 +8,31 @@ import (
 	"strconv"
 )
 
+type FrontendBackendStats struct {
+	TotalDurationMs    map[string][]float64 `json:"total_duration_ms"`
+	RequestDurationMs  map[string][]float64 `json:"request_duration_ms"`
+	ResponseDurationMs map[string][]float64 `json:"response_duration_ms"`
+	RequestRate        map[string][]float64 `json:"request_rate"`
+}
+
+func (b *WebBackend) FrontendBackendStats(c *gin.Context) {
+	frontend := c.Param("frontend")
+	if _, ok := b.stats.FrontendToBackend[frontend]; !ok {
+		c.String(http.StatusNotFound, "no such frontend")
+		return
+	}
+
+	c.Writer.Header().Set("Cache-Control", "public, max-age=2, immutable")
+	stats := FrontendBackendStats{
+		TotalDurationMs:    b.stats.FrontendToBackend[frontend].TotalDurationMs,
+		RequestDurationMs:  b.stats.FrontendToBackend[frontend].RequestDurationMs,
+		ResponseDurationMs: b.stats.FrontendToBackend[frontend].ResponseDurationMs,
+		RequestRate:        b.stats.FrontendToBackend[frontend].RequestRate,
+	}
+	_ = stats
+	c.JSON(http.StatusOK, stats)
+}
+
 type FrontendStats struct {
 	DurationMs  map[string][]float64 `json:"duration_ms"`
 	RequestRate map[string][]float64 `json:"request_rate"`

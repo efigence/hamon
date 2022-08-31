@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/s/s.css">
+    <script src="/s/d3.v4.min.js"></script>
+    <script src="/s/d3-horizon-chart.js"></script>
+    <title>{{ .title }}</title>
+</head>
+<body>
+<script src="/s/appStats.js"></script>
+<table>
+      {{ $frontend := .frontend }}
+      {{range .backends}}
+    <tr>
+        <td>{{.}}</td>
+        <td>
+            <div role="b_total_{{.}}"><canvas height="20" width="256"></canvas></div>
+            <div role="b_req_{{.}}"><canvas height="20" width="256"></canvas></div>
+            <div role="b_resp_{{.}}"><canvas height="20" width="256"></canvas></div>
+            <div role="b_rate_{{.}}"><canvas height="20" width="256"></canvas></div>
+        </td>
+    <script>
+        runGraph(chartTimeMs,"/v1/stats/frontend/{{$frontend}}","total_duration_ms","{{.}}","b_total_{{.}}")
+        runGraph(chartTimeMs,"/v1/stats/frontend/{{$frontend}}","request_duration_ms","{{.}}","b_req_{{.}}")
+        runGraph(chartTimeMs,"/v1/stats/frontend/{{$frontend}}","response_duration_ms","{{.}}","b_resp_{{.}}")
+        runGraph(chartReq,"/v1/stats/frontend/{{$frontend}}","request_rate","{{.}}","b_rate_{{.}}")
+    </script>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>
