@@ -88,7 +88,19 @@ setInterval(function() {
 function runGraph(graphTemplate,path, key,key2, role) {
     var div =  d3.select('[role="' + role + '"]');
     dataCache(path);
+    var earlyRefresh = setInterval(function() {
+        data = dataHash[path]
+        div
+            .data([data[key][key2]])
+            .each(graphTemplate);
+        console.log("early" + key2);
+        if (data != null) {
+            console.log("clear" + key2);
+            clearInterval(earlyRefresh)
+        }
+    },100)
     setInterval(function () {
+        clearInterval(earlyRefresh)
         data = dataHash[path]
         div
             .data([data[key][key2]])
