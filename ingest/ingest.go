@@ -39,23 +39,19 @@ func New(cfg Config) (*Ingest, chan haproxy.HTTPRequest, error) {
 
 func (i *Ingest) ingestor(conn *net.UDPConn, ch chan haproxy.HTTPRequest) {
 	buf := make([]byte, 65535)
-	go func() {
-		for {
-			n, addr, err := conn.ReadFromUDP(buf)
-			_ = addr
-			log_str := string(buf[0:n])
-			if err != nil {
-				i.l.Errorf("Error: %s", err)
-			}
-			if strings.Contains(log_str, " SSL handshake") {
-				continue
-			}
-			req, err := haproxy.DecodeHTTPLog(log_str)
-			if req.FrontendName == "" {
-				continue
-			}
-			ch <- req
+	for {
+		n, _, err := conn.ReadFromUDP(buf)
+		log_str := string(buf[0:n])
+		if err != nil {
+			i.l.Errorf("Error: %s", err)
 		}
-	}()
-
+		if strings.Contains(log_str, " SSL handshake") {
+			continue
+		}
+		req, err := haproxy.DecodeHTTPLog(log_str)
+		if req.FrontendName == "" {
+			continue
+		}
+		ch <- req
+	}
 }
