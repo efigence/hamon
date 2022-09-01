@@ -61,6 +61,10 @@ func newStatBlock() *StatBlock {
 				sb.RequestRate[k] = append([]float64{sb.rate[k].CurrentNow()}, sb.RequestRate[k][:len(sb.RequestRate[k])-1]...)
 				sb.Lock()
 				sb.Pct75th[k], _ = stats.Percentile(sb.TotalDurationMs[k], 75)
+				if i%256 == 1 && len(sb.Slowlog[k]) > slowReqLogSize {
+					sortSlowlog(sb.Slowlog[k], time.Now().Add(probes*interval*-1))
+					sb.Slowlog[k] = sb.Slowlog[k][:slowReqLogSize-1]
+				}
 				sb.Unlock()
 			}
 		}
@@ -112,7 +116,8 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 	if float64(ev.TotalDurationMs) > sb.Pct75th[name] {
 		sb.Slowlog[name] = append(sb.Slowlog[name], ev)
 	}
-	if len(sb.Slowlog[name]) > (slowReqLogSize * 4) {
+	sll := len(sb.Slowlog[name])
+	if sll > (slowReqLogSize * 4) {
 		sortSlowlog(sb.Slowlog[name], time.Now().Add(probes*interval*-1))
 		sb.Slowlog[name] = sb.Slowlog[name][:slowReqLogSize-1]
 	}

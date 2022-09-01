@@ -105,22 +105,8 @@ func (b *WebBackend) V1FrontendSlow(c *gin.Context) {
 		}
 		return false
 	})
-	slow := []SlowList{}
-	for _, e := range slowlog {
-		slow = append(slow, SlowList{
-			TS:                 e.Timestamp(),
-			Path:               e.RequestPath,
-			Client:             e.ClientIP,
-			Backend:            e.BackendName,
-			Server:             e.ServerName,
-			ServerConnCount:    int(e.ServerConn),
-			TotalDurationMs:    e.TotalDurationMs,
-			RequestDurationMs:  e.RequestHeaderDurationMs,
-			ResponseDurationMs: e.ResponseHeaderDurationMs,
-		})
-	}
 
-	c.JSON(http.StatusOK, slow)
+	c.JSON(http.StatusOK, slowlog)
 }
 func (b *WebBackend) Slow(c *gin.Context) {
 	frontend := c.Param("name")

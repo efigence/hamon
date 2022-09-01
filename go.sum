@@ -4,8 +4,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:ma
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/efigence/go-haproxy v0.0.5 h1:wFiWUv4PssMyVnpbPSXNoShJTDyG0jlzy0lv8MobXLI=
-github.com/efigence/go-haproxy v0.0.5/go.mod h1:LLLN5fACQtOt049vq/dzER+EO2IHlZBWCNGjVU/2EWM=
+github.com/efigence/go-haproxy v0.0.6 h1:sOkiW3thCqrewgGcSgyNIBY3c1cRkSmfqE8Z60hhaT8=
+github.com/efigence/go-haproxy v0.0.6/go.mod h1:LLLN5fACQtOt049vq/dzER+EO2IHlZBWCNGjVU/2EWM=
 github.com/efigence/go-libs v0.0.0-20171115061947-5b2936a0c2a1/go.mod h1:+L8bBUFAIfgv+GWyTdOiHNUw9M1jh/7KxzmYXK2pUQA=
 github.com/efigence/go-libs/ewma v0.0.0-20220816123911-60e483f7128c h1:Gi4sE+G+qXugGMgl1amrFvE36xC8UWCZPBF3Zzq1b3Y=
 github.com/efigence/go-libs/ewma v0.0.0-20220816123911-60e483f7128c/go.mod h1:KVirvQIfC9njZyYEzFffm8ppQHO9TOZqoMQrqxEi6Rk=
