@@ -114,13 +114,15 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 	}
 	if len(sb.Slowlog[name]) > (slowReqLogSize * 4) {
 		sortSlowlog(sb.Slowlog[name], time.Now().Add(probes*interval*-1))
-		sb.Slowlog[name] = sb.Slowlog[name][:slowReqLogSize*2]
+		sb.Slowlog[name] = sb.Slowlog[name][:slowReqLogSize-1]
 	}
 }
 
 func (sb *StatBlock) GetSlowlog(frontend string) []haproxy.HTTPRequest {
 	if len(sb.Slowlog[frontend]) > slowReqLogSize {
-		return sb.Slowlog[frontend][:slowReqLogSize-1]
+		l := sb.Slowlog[frontend]
+		sortSlowlog(l, time.Now().Add(probes*interval*-1))
+		return l[:slowReqLogSize-1]
 	} else {
 		return sb.Slowlog[frontend]
 	}
