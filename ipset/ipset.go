@@ -51,7 +51,7 @@ func Add(set string, ip net.IP) error {
 type Ipsets struct {
 	XMLName xml.Name `xml:"ipsets"`
 	Text    string   `xml:",chardata"`
-	Ipset   struct {
+	Ipset   []struct {
 		Text     string `xml:",chardata"`
 		Name     string `xml:"name,attr"`
 		Type     string `xml:"type"`
@@ -91,7 +91,7 @@ func List(name string) ([]net.IP, error) {
 	if err != nil {
 		return []net.IP{}, err
 	}
-	for _, v := range ipsXML.Ipset.Members.Member {
+	for _, v := range ipsXML.Ipset[0].Members.Member {
 		ip := net.ParseIP(v.Elem)
 		if ip == nil {
 			return []net.IP{}, fmt.Errorf("error parsing [%s] as IP", v.Elem)
@@ -99,4 +99,21 @@ func List(name string) ([]net.IP, error) {
 		ipList = append(ipList, ip)
 	}
 	return ipList, nil
+}
+func ListIpsets() ([]string, error) {
+	cmd := exec.Command(bin, "list", "-t", "-o", "xml")
+	ipsetList := []string{}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return []string{}, err
+	}
+	ipsXML := &Ipsets{}
+	err = xml.Unmarshal(out, ipsXML)
+	if err != nil {
+		return []string{}, err
+	}
+	for _, v := range ipsXML.Ipset {
+		ipsetList = append(ipsetList, v.Name)
+	}
+	return ipsetList, nil
 }

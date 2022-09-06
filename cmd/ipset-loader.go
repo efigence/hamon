@@ -12,12 +12,14 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 	"time"
 )
 
 var version string
 var log *zap.SugaredLogger
-var debug = true
+var debug = false
 
 var httpclient = http.Client{
 	Timeout: time.Second * 10,
@@ -37,8 +39,13 @@ func init() {
 		return lvl >= zapcore.ErrorLevel
 	})
 	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.ErrorLevel
+		return lvl < zapcore.ErrorLevel && lvl > zapcore.DebugLevel
 	})
+	if debug {
+		lowPriority = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl < zapcore.ErrorLevel
+		})
+	}
 	core := zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, os.Stderr, lowPriority),
 		zapcore.NewCore(consoleEncoder, os.Stderr, highPriority),
@@ -101,17 +108,25 @@ func getTmpNameIpset() string {
 
 func mainApp(c *cli.Context) error {
 	ipsetName := c.String("ipset-name")
-	url := c.String("address") + "/stats/top_ip/" + c.String("above")
+	url := c.String("address") + "/v1/stats/top_ip/" + c.String("above")
+	log.Infof("using url %s", url)
 	if c.Bool("daemon") {
+		i := 0
 		for {
+			i++
 			time.Sleep(time.Second)
 			err := update(url, ipsetName)
 			if err != nil {
 				log.Errorf("err: %s", err)
 			}
 
+			if i%128 == 1 {
+				cleanup()
+			}
+
 		}
 	} else {
+		cleanup()
 		return update(url, ipsetName)
 	}
 	return nil
@@ -127,7 +142,6 @@ func update(url, ipsetName string) error {
 	if err != nil {
 		return err
 	}
-
 	body, err := ioutil.ReadAll(res.Body)
 	ips := TopIP{}
 	err = json.Unmarshal(body, &ips)
@@ -149,6 +163,17 @@ func update(url, ipsetName string) error {
 func loader(ipsetName string, ips []net.IP) error {
 	////we just ignore errors here, no point checking if it exists
 	ipset.Create(ipsetName, "hash:ip")
+	current, _ := ipset.List(ipsetName)
+	sort.SliceStable(ips, func(i, j int) bool {
+		return ips[i].String() > ips[j].String()
+	})
+	sort.SliceStable(current, func(i, j int) bool {
+		return current[i].String() > current[j].String()
+	})
+	if Equal(ips, current) {
+		log.Debugf("current and new list are same, doing nothing")
+		return nil
+	}
 	tmpSet := getTmpNameIpset()
 	err := ipset.Create(tmpSet, "hash:ip")
 	// first before err check because better safe than littering
@@ -161,8 +186,6 @@ func loader(ipsetName string, ips []net.IP) error {
 	if err != nil {
 		log.Fatalf("error adding temporary chain: %s", err)
 	}
-	list, err := ipset.List("hamon-swap")
-	fmt.Printf("current: %+v\n", list)
 	for _, ip := range ips {
 		log.Infof("adding %s to %s", ipsetName, ip)
 		err := ipset.Add(tmpSet, ip)
@@ -172,4 +195,48 @@ func loader(ipsetName string, ips []net.IP) error {
 	}
 	err = ipset.Swap(tmpSet, ipsetName)
 	return err
+}
+
+func Filter[S any](s []S, f func(S) bool) []S {
+	var accum []S
+	for _, v := range s {
+		if f(v) {
+			accum = append(accum, v)
+		}
+	}
+	return accum
+}
+
+func Equal(a []net.IP, b []net.IP) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for idx, _ := range a {
+		if a[idx].String() != b[idx].String() {
+			return false
+		}
+	}
+	return true
+}
+func cleanup() {
+	ipsets, err := ipset.ListIpsets()
+	if err != nil {
+		log.Errorf("error getting ipsets list: %s", err)
+		return
+	}
+	currentPrefix := fmt.Sprintf("hamon-tmp-%s", time.Now().Format("060102"))
+	fmt.Printf("%+v\n", ipsets)
+	tmpSets := Filter(ipsets, func(s string) bool {
+		return strings.HasPrefix(s, "hamon-tmp")
+	})
+	fmt.Printf("%+v\n", tmpSets)
+	toDelete := Filter(tmpSets, func(s string) bool {
+		return !strings.HasPrefix(s, currentPrefix)
+	})
+	fmt.Printf("%+v\n", toDelete)
+	for _, v := range toDelete {
+		log.Infof("destroying old top ipset %s", v)
+		ipset.Destroy(v)
+	}
+
 }
