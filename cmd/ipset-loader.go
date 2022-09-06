@@ -76,6 +76,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "help, h", Usage: "show help"},
 		cli.BoolFlag{Name: "daemon", Usage: "daemonize"},
+		cli.BoolFlag{Name: "filter-private", Usage: "filter private IP classes"},
 		cli.StringFlag{
 			Name:  "address",
 			Value: "http://127.0.0.1:3001",
@@ -108,6 +109,7 @@ func getTmpNameIpset() string {
 
 func mainApp(c *cli.Context) error {
 	ipsetName := c.String("ipset-name")
+	filterPrivate := c.Bool("filter-private")
 	url := c.String("address") + "/v1/stats/top_ip/" + c.String("above")
 	log.Infof("using url %s", url)
 	if c.Bool("daemon") {
@@ -115,7 +117,7 @@ func mainApp(c *cli.Context) error {
 		for {
 			i++
 			time.Sleep(time.Second)
-			err := update(url, ipsetName)
+			err := update(url, ipsetName, filterPrivate)
 			if err != nil {
 				log.Errorf("err: %s", err)
 			}
@@ -127,7 +129,7 @@ func mainApp(c *cli.Context) error {
 		}
 	} else {
 		cleanup()
-		return update(url, ipsetName)
+		return update(url, ipsetName, filterPrivate)
 	}
 	return nil
 }
@@ -136,7 +138,7 @@ type TopIP struct {
 	IPRate map[string]float64 `json:"ip_rate"`
 }
 
-func update(url, ipsetName string) error {
+func update(url, ipsetName string, filterPrivate bool) error {
 	res, err := http.Get(url)
 
 	if err != nil {
@@ -151,6 +153,9 @@ func update(url, ipsetName string) error {
 	ipList := []net.IP{}
 	for ip, _ := range ips.IPRate {
 		i := net.ParseIP(ip)
+		if filterPrivate && i.IsPrivate() {
+			continue
+		}
 		if i == nil {
 			log.Errorf("could not decode IP: %s", ip)
 			continue
