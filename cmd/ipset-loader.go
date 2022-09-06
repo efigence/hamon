@@ -76,7 +76,7 @@ func main() {
 		},
 		cli.Float64Flag{
 			Name:     "above",
-			Usage:    "only add IPs above the range",
+			Usage:    "only add IPs wth req/s above that",
 			Required: true,
 		},
 		cli.StringFlag{
@@ -101,10 +101,18 @@ func getTmpNameIpset() string {
 
 func mainApp(c *cli.Context) error {
 	ipsetName := c.String("ipset-name")
+	url := c.String("address") + "/stats/top_ip/" + c.String("above")
+	if c.Bool("daemon") {
+		for {
+			time.Sleep(time.Second)
+			err := update(url, ipsetName)
+			if err != nil {
+				log.Errorf("err: %s", err)
+			}
 
-	err := update("http://127.0.0.1:3001/stats/top_ip/0.1", ipsetName)
-	if err != nil {
-		log.Errorf("err: %s", err)
+		}
+	} else {
+		return update(url, ipsetName)
 	}
 	return nil
 }
