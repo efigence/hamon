@@ -111,8 +111,8 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 	}
 	sb.rate[name].UpdateNow()
 	sb.TopRequest[name].Add(ev.ClientIP)
-	sb.RLock()
-	defer sb.RUnlock()
+	sb.Lock()
+	defer sb.Unlock()
 	if float64(ev.TotalDurationMs) > sb.Pct75th[name] {
 		sb.Slowlog[name] = append(sb.Slowlog[name], ev)
 	}
@@ -124,6 +124,8 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 }
 
 func (sb *StatBlock) GetSlowlog(frontend string) []haproxy.HTTPRequest {
+	sb.RLock()
+	defer sb.RUnlock()
 	if len(sb.Slowlog[frontend]) > slowReqLogSize {
 		l := sb.Slowlog[frontend]
 		sortSlowlog(l, time.Now().Add(probes*interval*-1))

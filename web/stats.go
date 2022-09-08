@@ -14,6 +14,7 @@ func (b *WebBackend) V1TopRate(c *gin.Context) {
 		c.String(http.StatusBadRequest, fmt.Sprintf("need valid rate in path[%s]", err))
 	}
 	rate := map[string]float64{}
+	b.stats.Frontends.RLock()
 	for _, v := range b.stats.Frontends.TopRequest {
 		_, v := v.List()
 		for ip, ipRate := range v {
@@ -26,6 +27,7 @@ func (b *WebBackend) V1TopRate(c *gin.Context) {
 			}
 		}
 	}
+	b.stats.Frontends.RUnlock()
 	c.JSON(http.StatusOK, gin.H{
 		"ip_rate": rate,
 	})

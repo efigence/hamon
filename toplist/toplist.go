@@ -9,7 +9,7 @@ import (
 
 type Toplist struct {
 	sync.Mutex
-	toplistLock sync.Mutex
+	toplistLock sync.RWMutex
 	size        int
 	decay       time.Duration
 	bufferSize  int
@@ -121,11 +121,13 @@ func (t *Toplist) List() (order []string, values map[string]float64) {
 	top := make(map[string]float64, len(t.topList))
 	topKeys := make([]string, len(t.topList))
 	i := 0
+	t.toplistLock.RLock()
 	for k, v := range t.topList {
 		top[k] = v.CurrentNow()
 		topKeys[i] = k
 		i++
 	}
+	t.toplistLock.RUnlock()
 	sort.Slice(topKeys, func(i, j int) bool {
 		return top[topKeys[i]] > top[topKeys[j]]
 	})
