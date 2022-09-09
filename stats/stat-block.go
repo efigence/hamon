@@ -97,7 +97,7 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 				sb.response_ewma[name].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
 			}
 		}
-		sb.TopRequest[name] = toplist.New(20, time.Minute, 2048)
+		sb.TopRequest[name] = toplist.New(20, time.Minute*2, 2048)
 
 	}
 	if !ignoreDuration {
