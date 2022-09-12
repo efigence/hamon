@@ -1,7 +1,9 @@
 package stats
 
 import (
+	"fmt"
 	"github.com/efigence/go-haproxy"
+	"github.com/efigence/go-mon"
 	"time"
 )
 
@@ -31,5 +33,34 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 			s.FrontendToBackend[ev.FrontendName].Update(ev, ev.BackendName)
 		}
 	}()
+	go s.runStats()
 	return s
+}
+
+func (s *Stats) runStats() {
+	st := map[int]mon.Metric{}
+	quantiles := 10
+	step := 10
+	for i := 0; i < quantiles; i++ {
+		rateQ := i * step
+		st[i] = mon.GlobalRegistry.MustRegister(fmt.Sprintf("ip.above.rate.%d", rateQ), mon.NewGauge("requests"))
+	}
+	for {
+		time.Sleep(time.Second)
+		top := s.TopRate()
+		sum := map[int]int{}
+		for i := 0; i < step; i++ {
+			sum[i] = 0
+		}
+		for _, rate := range top {
+			for i := 0; i < quantiles; i++ {
+				if rate > float64(i*step) {
+					sum[i]++
+				}
+			}
+		}
+		for i := 0; i < quantiles; i++ {
+			st[i].Update(sum[i])
+		}
+	}
 }

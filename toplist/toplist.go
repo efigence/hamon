@@ -93,6 +93,10 @@ func (t *Toplist) recalculate() {
 				initValue = initValue / diffSec
 			}
 			t.topList[k] = ewma.NewEwmaRate(t.decay)
+			// cut the initial value to avoid "new user spike"
+			// when user connects to site for first time and has no cache
+			// so amount of requests is abnormally high
+			// t.topList[k].Set(initValue/2, time.Now().Add(t.decay*-1))
 			t.topList[k].Set(initValue, time.Now().Add(t.decay*-1))
 		}
 	}
