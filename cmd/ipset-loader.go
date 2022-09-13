@@ -230,15 +230,12 @@ func cleanup() {
 		return
 	}
 	currentPrefix := fmt.Sprintf("hamon-tmp-%s", time.Now().Format("060102"))
-	fmt.Printf("%+v\n", ipsets)
 	tmpSets := Filter(ipsets, func(s string) bool {
 		return strings.HasPrefix(s, "hamon-tmp")
 	})
-	fmt.Printf("%+v\n", tmpSets)
 	toDelete := Filter(tmpSets, func(s string) bool {
 		return !strings.HasPrefix(s, currentPrefix)
 	})
-	fmt.Printf("%+v\n", toDelete)
 	for _, v := range toDelete {
 		log.Infof("destroying old top ipset %s", v)
 		ipset.Destroy(v)
