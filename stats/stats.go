@@ -43,7 +43,12 @@ func (s *Stats) runStats() {
 	step := 10
 	for i := 0; i < quantiles; i++ {
 		rateQ := i * step
-		st[i] = mon.GlobalRegistry.MustRegister(fmt.Sprintf("ip.above.rate.%d", rateQ), mon.NewGauge("requests"))
+		if i == 0 {
+			// no need to return "above zero" metric
+			st[0] = mon.NewGauge("nothing")
+		} else {
+			st[i] = mon.GlobalRegistry.MustRegister(fmt.Sprintf("ip.above.rate.%d", rateQ), mon.NewGauge("requests"))
+		}
 	}
 	for {
 		time.Sleep(time.Second)
