@@ -122,10 +122,10 @@ func (t *Toplist) recalculate() {
 }
 
 func (t *Toplist) List() (order []string, values map[string]float64) {
+	t.toplistLock.RLock()
 	top := make(map[string]float64, len(t.topList))
 	topKeys := make([]string, len(t.topList))
 	i := 0
-	t.toplistLock.RLock()
 	for k, v := range t.topList {
 		top[k] = v.CurrentNow()
 		topKeys[i] = k
