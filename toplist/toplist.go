@@ -16,6 +16,7 @@ type Toplist struct {
 	topList     map[string]*ewma.EwmaRate
 	events      []string
 	eventsIdx   int
+	destroy     chan bool
 	lastRecalc  time.Time
 }
 
@@ -26,6 +27,7 @@ func New(size int, decay time.Duration, bufferSize ...int) *Toplist {
 		decay:      decay,
 		lastRecalc: time.Now().Add(decay * -1),
 		topList:    make(map[string]*ewma.EwmaRate, size),
+		destroy:    make(chan bool, 1),
 	}
 	if len(bufferSize) < 1 && t.bufferSize < size*4 {
 		if size < 1024 {
@@ -45,7 +47,10 @@ func New(size int, decay time.Duration, bufferSize ...int) *Toplist {
 		if interval > time.Second*10 {
 			interval = time.Second * 10
 		}
-
+		if len(t.destroy) > 0 {
+			close(t.destroy)
+			return
+		}
 		for {
 			time.Sleep(interval)
 			if time.Now().Sub(t.lastRecalc) > interval {
@@ -67,9 +72,17 @@ func (t *Toplist) Add(s string) {
 	t.events[t.eventsIdx] = s
 	t.eventsIdx++
 	t.Unlock()
+}
+func (t *Toplist) Destroy() {
+	select {
+	case t.destroy <- true:
+	case <-time.After(time.Millisecond * 10):
+	}
+	return
 
 }
 func (t *Toplist) recalculate() {
+
 	t.Lock()
 	m := make(map[string]int)
 	for _, s := range t.events[:t.eventsIdx] {
@@ -118,7 +131,6 @@ func (t *Toplist) recalculate() {
 		}
 
 	}
-
 }
 
 func (t *Toplist) List() (order []string, values map[string]float64) {
