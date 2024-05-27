@@ -49,7 +49,14 @@ func New(cfg Config, webFS fs.FS) (backend *WebBackend, err error) {
 	}
 	r.SetHTMLTemplate(t)
 	// for zap logging
-	r.Use(ginzap.Ginzap(w.l.Desugar(), time.RFC3339, false))
+	r.Use(ginzap.GinzapWithConfig(w.l.Desugar(), &ginzap.Config{
+		TimeFormat: time.RFC3339,
+		UTC:        false,
+		SkipPaths: []string{
+			"/_status/health",
+			"/_status/metrics",
+		},
+	}))
 	//r.Use(ginzap.RecoveryWithZap(w.l.Desugar(), true))
 	// basic logging to stdout
 	//r.Use(gin.LoggerWithWriter(os.Stdout))

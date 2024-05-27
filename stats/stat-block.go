@@ -1,10 +1,12 @@
 package stats
 
 import (
+	"fmt"
 	"github.com/efigence/go-haproxy"
 	"github.com/efigence/go-libs/ewma"
 	"github.com/efigence/hamon/toplist"
 	"github.com/montanaflynn/stats"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -70,6 +72,10 @@ func newStatBlock() *StatBlock {
 		}
 
 	}()
+	// debugging lost memory
+	runtime.SetFinalizer(&sb, func(block *StatBlock) {
+		fmt.Printf("EXITING statblock size %d", len(block.request_ewma))
+	})
 	return &sb
 }
 
