@@ -15,7 +15,7 @@ func (b *WebBackend) Frontend(c *gin.Context) {
 		c.String(http.StatusNotFound, "no such frontend")
 		return
 	}
-	for k, _ := range b.stats.FrontendToBackend[frontend].RequestRate {
+	for k := range b.stats.FrontendToBackend[frontend].RequestRate {
 		backendList = append(backendList, k)
 	}
 	sort.Strings(backendList)

@@ -95,7 +95,7 @@ func (t *Toplist) recalculate() {
 	now := time.Now()
 	diffSec := now.Sub(t.lastRecalc).Seconds()
 	t.lastRecalc = now
-	for k, _ := range m {
+	for k := range m {
 		if _, ok := t.topList[k]; ok {
 			t.topList[k].UpdateValueNow(float64(m[k]))
 		} else {

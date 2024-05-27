@@ -151,7 +151,7 @@ func update(url, ipsetName string, filterPrivate bool) error {
 		return err
 	}
 	ipList := []net.IP{}
-	for ip, _ := range ips.IPRate {
+	for ip := range ips.IPRate {
 		i := net.ParseIP(ip)
 		if filterPrivate && i.IsPrivate() {
 			continue
@@ -216,7 +216,7 @@ func Equal(a []net.IP, b []net.IP) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for idx, _ := range a {
+	for idx := range a {
 		if a[idx].String() != b[idx].String() {
 			return false
 		}
