@@ -29,8 +29,10 @@ func init() {
 	// naive systemd detection. Drop timestamp if running under it
 	if os.Getenv("INVOCATION_ID") != "" || os.Getenv("JOURNAL_STREAM") != "" {
 		consoleEncoderConfig.TimeKey = ""
+		consoleEncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	} else {
+		consoleEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	}
-	consoleEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
 	consoleStderr := zapcore.Lock(os.Stderr)
 	_ = consoleStderr
