@@ -20,7 +20,7 @@ import (
 var version string
 var log *zap.SugaredLogger
 var debug = false
-
+var quiet = false
 var httpclient = http.Client{
 	Timeout: time.Second * 10,
 }
@@ -77,6 +77,7 @@ func main() {
 		cli.BoolFlag{Name: "help, h", Usage: "show help"},
 		cli.BoolFlag{Name: "daemon", Usage: "daemonize"},
 		cli.BoolFlag{Name: "filter-private", Usage: "filter private IP classes"},
+		cli.BoolFlag{Name: "quiet", Usage: "do not spam with added IPs"},
 		cli.StringFlag{
 			Name:  "address",
 			Value: "http://127.0.0.1:3001",
@@ -112,6 +113,9 @@ func mainApp(c *cli.Context) error {
 	filterPrivate := c.Bool("filter-private")
 	url := c.String("address") + "/v1/stats/top_ip/" + c.String("above")
 	log.Infof("using url %s", url)
+	if c.Bool("quiet") {
+		quiet = true
+	}
 	if c.Bool("daemon") {
 		i := 0
 		for {
@@ -192,7 +196,9 @@ func loader(ipsetName string, ips []net.IP) error {
 		log.Fatalf("error adding temporary chain: %s", err)
 	}
 	for _, ip := range ips {
-		log.Infof("adding %s to %s", ipsetName, ip)
+		if !quiet {
+			log.Infof("adding %s to %s", ipsetName, ip)
+		}
 		err := ipset.Add(tmpSet, ip)
 		if err != nil {
 			log.Errorf("err: %s", err)
