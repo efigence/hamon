@@ -17,7 +17,7 @@ type Ingest struct {
 	l *zap.SugaredLogger
 }
 
-var ingestRate = mon.GlobalRegistry.MustRegister("ingest.rate", mon.NewCounter("bytes"))
+var ingestRate = mon.GlobalRegistry.MustRegister("hamon_ingest_rate", mon.NewCounter("bytes"))
 
 func New(cfg Config) (*Ingest, chan haproxy.HTTPRequest, error) {
 	i := Ingest{
@@ -44,7 +44,7 @@ func (i *Ingest) ingestor(conn *net.UDPConn, ch chan haproxy.HTTPRequest) {
 	buf := make([]byte, 65535)
 	for {
 		n, _, err := conn.ReadFromUDP(buf)
-		ingestRate.Update(n)
+		ingestRate.Update(float64(n))
 		log_str := string(buf[0:n])
 		if err != nil {
 			i.l.Errorf("Error: %s", err)

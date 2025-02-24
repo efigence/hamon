@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/efigence/go-haproxy v0.0.6
 	github.com/efigence/go-libs/ewma v0.0.1
-	github.com/efigence/go-mon v1.4.2
+	github.com/efigence/go-mon v1.5.1-0.20250224142207-5c56613a618b
 	github.com/gin-contrib/zap v0.1.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/montanaflynn/stats v0.6.6
@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/XANi/goneric v1.3.0 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

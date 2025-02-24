@@ -47,7 +47,7 @@ func (s *Stats) runStats() {
 			// no need to return "above zero" metric
 			st[0] = mon.NewGauge("nothing")
 		} else {
-			st[i] = mon.GlobalRegistry.MustRegister(fmt.Sprintf("ip.above.rate.%d", rateQ), mon.NewGauge("requests"))
+			st[i] = mon.GlobalRegistry.MustRegister("hamon_ip_above_rate", mon.NewGauge("requests"), map[string]string{"rate": fmt.Sprintf("%d", rateQ)})
 		}
 	}
 	for {
@@ -65,7 +65,7 @@ func (s *Stats) runStats() {
 			}
 		}
 		for i := 0; i < quantiles; i++ {
-			st[i].Update(sum[i])
+			st[i].Update(float64(sum[i]))
 		}
 	}
 }
