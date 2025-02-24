@@ -4,8 +4,8 @@ go 1.22
 
 require (
 	github.com/efigence/go-haproxy v0.0.6
-	github.com/efigence/go-libs/ewma v0.0.0-20220816123911-60e483f7128c
-	github.com/efigence/go-mon v1.3.1
+	github.com/efigence/go-libs/ewma v0.0.1
+	github.com/efigence/go-mon v1.4.2
 	github.com/gin-contrib/zap v0.1.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/montanaflynn/stats v0.6.6
