@@ -81,6 +81,11 @@ func main() {
 			EnvVar: "LISTEN_ADDR",
 		},
 		cli.StringFlag{
+			Name:  "ingest-addr",
+			Value: "127.0.0.1:50514",
+			Usage: "Address to listen for haproxy UDP logs",
+		},
+		cli.StringFlag{
 			Name:  "debug-addr",
 			Usage: "start debug server (pprof) on that [ip]:port",
 			Value: "",
@@ -98,9 +103,10 @@ func main() {
 				os.Exit(1)
 			}()
 		}
+		log.Infof("ingest on: %s", c.String("ingest-addr"))
 
 		ingest, reqCh, err := ingest.New(ingest.Config{
-			ListenAddr: "127.0.0.1:50514",
+			ListenAddr: c.String("ingest-addr"),
 			Logger:     log,
 		})
 		st := stats.New(reqCh)
