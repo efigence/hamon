@@ -40,6 +40,7 @@ func newStatBlock(topSize int) *StatBlock {
 		TopRequest:         map[string]*toplist.Toplist{},
 		Slowlog:            map[string][]haproxy.HTTPRequest{},
 		Pct75th:            map[string]float64{},
+		toplistSize:        topSize,
 	}
 	go func() {
 		i := 0
