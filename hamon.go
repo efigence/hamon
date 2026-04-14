@@ -90,6 +90,11 @@ func main() {
 			Usage: "start debug server (pprof) on that [ip]:port",
 			Value: "",
 		},
+		cli.IntFlag{
+			Name:  "toplist-size",
+			Value: 20,
+			Usage: "size of top list",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		if c.Bool("help") {
@@ -109,7 +114,7 @@ func main() {
 			ListenAddr: c.String("ingest-addr"),
 			Logger:     log,
 		})
-		st := stats.New(reqCh)
+		st := stats.New(reqCh, stats.Config{ToplistSize: c.Int("toplist-size")})
 
 		if err != nil {
 			log.Panicf("%s", err)
