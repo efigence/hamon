@@ -17,10 +17,21 @@ type Stats struct {
 	FrontendToBackend map[string]*StatBlock
 }
 
-func New(ch chan haproxy.HTTPRequest) *Stats {
+type Config struct {
+	ToplistSize int
+}
+
+func New(ch chan haproxy.HTTPRequest, c ...Config) *Stats {
+	cfg := Config{ToplistSize: 20}
+	if len(c) > 0 {
+		cfg = c[0]
+	}
+	if cfg.ToplistSize <= 0 {
+		cfg.ToplistSize = 20
+	}
 	s := &Stats{
-		Frontends:         newStatBlock(),
-		Backends:          newStatBlock(),
+		Frontends:         newStatBlock(cfg.ToplistSize),
+		Backends:          newStatBlock(cfg.ToplistSize),
 		FrontendToBackend: make(map[string]*StatBlock),
 	}
 	go func() {
@@ -28,7 +39,7 @@ func New(ch chan haproxy.HTTPRequest) *Stats {
 			s.Frontends.Update(ev, ev.FrontendName)
 			s.Backends.Update(ev, ev.BackendName)
 			if _, ok := s.FrontendToBackend[ev.FrontendName]; !ok {
-				s.FrontendToBackend[ev.FrontendName] = newStatBlock()
+				s.FrontendToBackend[ev.FrontendName] = newStatBlock(cfg.ToplistSize)
 			}
 			s.FrontendToBackend[ev.FrontendName].Update(ev, ev.BackendName)
 		}

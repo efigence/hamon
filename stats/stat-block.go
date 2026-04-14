@@ -23,10 +23,11 @@ type StatBlock struct {
 	TopRequest         map[string]*toplist.Toplist `json:"top_request"`
 	Slowlog            map[string][]haproxy.HTTPRequest
 	Pct75th            map[string]float64 `json:"75th"`
+	toplistSize        int
 	sync.RWMutex
 }
 
-func newStatBlock() *StatBlock {
+func newStatBlock(topSize int) *StatBlock {
 	sb := StatBlock{
 		total_ewma:         make(map[string]*ewma.Ewma, 0),
 		request_ewma:       make(map[string]*ewma.Ewma, 0),
@@ -103,7 +104,7 @@ func (sb *StatBlock) Update(ev haproxy.HTTPRequest, name string) {
 				sb.response_ewma[name].Set(float64(ev.ResponseHeaderDurationMs), time.Now())
 			}
 		}
-		sb.TopRequest[name] = toplist.New(20, time.Minute*2, 2048)
+		sb.TopRequest[name] = toplist.New(sb.toplistSize, time.Minute*2, 2048)
 
 	}
 	if !ignoreDuration {
